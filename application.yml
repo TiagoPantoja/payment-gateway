@@ -1,0 +1,38 @@
+gateway:
+  api:
+    url: https://sandbox.api.stripe.com
+    token: ${GATEWAY_API_TOKEN:sk_test_12345}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentProvider:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+  retry:
+    instances:
+      paymentProvider:
+        maxAttempts: 3
+        waitDuration: 2s
+        retryExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "health,info,metrics,prometheus"
+    endpoint:
+      health:
+        show-details: always
+    health:
+      circuitbreakers:
+        enabled: true
+      redis:
+        enabled: true
+    metrics:
+      tags:
+        application: payment-gateway
